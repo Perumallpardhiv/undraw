@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity() {
         binding.ibUndo.setOnClickListener { drawingView.undo() }
         binding.ibRedo.setOnClickListener { drawingView.redo() }
         binding.ibClear.setOnClickListener { drawingView.clear() }
+        binding.pickcolour.setOnClickListener{drawingView.openColorPicker()}
 
         binding.ibGallery.setOnClickListener {
             if (isReadStorageAllowed()) {

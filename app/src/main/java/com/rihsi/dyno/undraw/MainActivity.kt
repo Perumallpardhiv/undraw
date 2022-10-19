@@ -62,6 +62,7 @@ class MainActivity : AppCompatActivity() {
                 requestReadStoragePermission()
             }
         }
+        
         binding.ibSave.setOnClickListener {
             checkForShare=0
             requestWriteStoragePermission()
@@ -70,6 +71,7 @@ class MainActivity : AppCompatActivity() {
                   val flDrawingView: FrameLayout = binding.flDrawingViewContainer
                     saveMediaToStorage(getBitmapFromView(flDrawingView))
                 }
+                
             }
         }
             binding.ibShare.setOnClickListener{
@@ -155,21 +157,14 @@ class MainActivity : AppCompatActivity() {
         var brushSizeBinding = DialogBrushSizeBinding.inflate(layoutInflater)
         brushDialog.setContentView(brushSizeBinding.root)
         brushDialog.setTitle("Brush Size: ")
-
-        brushSizeBinding.brushSizeMinus.setOnClickListener {
-            drawingView.setSizeForBrush(10f)
-            brushDialog.dismiss()
+        
+        brushSizeBinding.brush_size_slider.addOnChangeListener { slider, value, fromUser ->
+            binding.drawingView.setSizeForBrush(slider.value)
         }
-        brushSizeBinding.brushSizePlus.setOnClickListener {
-            drawingView.setSizeForBrush(20f)
-            brushDialog.dismiss()
-        }
-        brushSizeBinding.brushSizeLarge.setOnClickListener {
-            drawingView.setSizeForBrush(30f)
-            brushDialog.dismiss()
-        }
+        
         brushDialog.show()
     }
+    
     private fun getBitmapFromView(view: View): Bitmap{
         val returnedBitmap  = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(returnedBitmap)
@@ -183,6 +178,7 @@ class MainActivity : AppCompatActivity() {
         view.draw(canvas)
         return returnedBitmap
     }
+    
 private fun saveMediaToStorage(bitmap: Bitmap){
     val filename = "${System.currentTimeMillis()}.png"
     var fos: OutputStream? =null
@@ -216,6 +212,7 @@ private fun saveMediaToStorage(bitmap: Bitmap){
         }
     }
 }
+
     private fun shareImage(result:Uri?){
             val shareIntent = Intent()
             shareIntent.action = Intent.ACTION_SEND

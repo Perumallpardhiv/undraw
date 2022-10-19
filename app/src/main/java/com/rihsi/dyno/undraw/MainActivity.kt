@@ -38,8 +38,8 @@ class MainActivity : AppCompatActivity() {
     private var mImageButtonCurrentPaint: ImageButton? = null
 
     private lateinit var binding: ActivityMainBinding
-    var curentImageUri : Uri? = null
-    var checkForShare=0
+    var curentImageUri: Uri? = null
+    var checkForShare = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
         binding.ibUndo.setOnClickListener { drawingView.undo() }
         binding.ibRedo.setOnClickListener { drawingView.redo() }
         binding.ibClear.setOnClickListener { drawingView.clear() }
-        binding.pickcolour.setOnClickListener{drawingView.openColorPicker()}
+        binding.pickcolour.setOnClickListener { drawingView.openColorPicker() }
 
         binding.ibGallery.setOnClickListener {
             if (isReadStorageAllowed()) {
@@ -62,22 +62,22 @@ class MainActivity : AppCompatActivity() {
                 requestReadStoragePermission()
             }
         }
-        
+
         binding.ibSave.setOnClickListener {
-            checkForShare=0
+            checkForShare = 0
             requestWriteStoragePermission()
-            if(isReadStorageAllowed()){
+            if (isReadStorageAllowed()) {
                 lifecycleScope.launch {
-                  val flDrawingView: FrameLayout = binding.flDrawingViewContainer
+                    val flDrawingView: FrameLayout = binding.flDrawingViewContainer
                     saveMediaToStorage(getBitmapFromView(flDrawingView))
                 }
-                
+
             }
         }
-            binding.ibShare.setOnClickListener{
-            checkForShare=1
+        binding.ibShare.setOnClickListener {
+            checkForShare = 1
             requestWriteStoragePermission()
-            if(isReadStorageAllowed()){
+            if (isReadStorageAllowed()) {
                 lifecycleScope.launch {
                     val flDrawingView: FrameLayout = binding.flDrawingViewContainer
                     saveMediaToStorage(getBitmapFromView(flDrawingView))
@@ -106,7 +106,6 @@ class MainActivity : AppCompatActivity() {
             )
         }
     }
-
 
 
     private fun isReadStorageAllowed(): Boolean {
@@ -157,68 +156,65 @@ class MainActivity : AppCompatActivity() {
         var brushSizeBinding = DialogBrushSizeBinding.inflate(layoutInflater)
         brushDialog.setContentView(brushSizeBinding.root)
         brushDialog.setTitle("Brush Size: ")
-        
-        brushSizeBinding.brush_size_slider.addOnChangeListener { slider, value, fromUser ->
+
+        brushSizeBinding.brushSizeSlider.addOnChangeListener { slider, value, fromUser ->
             binding.drawingView.setSizeForBrush(slider.value)
         }
-        
+
         brushDialog.show()
     }
-    
-    private fun getBitmapFromView(view: View): Bitmap{
-        val returnedBitmap  = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+
+    private fun getBitmapFromView(view: View): Bitmap {
+        val returnedBitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(returnedBitmap)
         val bgDrawable = view.background
-        if(bgDrawable != null){
+        if (bgDrawable != null) {
             bgDrawable.draw(canvas)
-        }
-        else{
+        } else {
             canvas.drawColor(Color.WHITE)
         }
         view.draw(canvas)
         return returnedBitmap
     }
-    
-private fun saveMediaToStorage(bitmap: Bitmap){
-    val filename = "${System.currentTimeMillis()}.png"
-    var fos: OutputStream? =null
-    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-        this.contentResolver?.also {
-                resolver ->
-            val contentValues = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
-                put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
-                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+
+    private fun saveMediaToStorage(bitmap: Bitmap) {
+        val filename = "${System.currentTimeMillis()}.png"
+        var fos: OutputStream? = null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            this.contentResolver?.also { resolver ->
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+                }
+                val imageUri: Uri? =
+                    resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                fos = imageUri?.let { resolver.openOutputStream(it) }
+                curentImageUri = imageUri
+
             }
-            val imageUri: Uri? = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-            fos = imageUri?.let { resolver.openOutputStream(it) }
-            curentImageUri = imageUri
+        } else {
+            val imagesDir =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+            val image = File(imagesDir, filename)
+            fos = FileOutputStream(image)
+        }
 
+        fos?.use {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, it)
+            if (checkForShare == 0) {
+                Toast.makeText(this, "Saved To Gallery", Toast.LENGTH_SHORT).show()
+            } else {
+                shareImage(curentImageUri)
+            }
         }
     }
-    else {
-        val imagesDir =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-        val image = File(imagesDir, filename)
-        fos = FileOutputStream(image)
-    }
 
-    fos?.use {
-        bitmap.compress(Bitmap.CompressFormat.PNG,90,it)
-        if(checkForShare==0){
-            Toast.makeText(this, "Saved To Gallery" , Toast.LENGTH_SHORT).show()
-        }
-        else{
-            shareImage(curentImageUri)
-        }
+    private fun shareImage(result: Uri?) {
+        val shareIntent = Intent()
+        shareIntent.action = Intent.ACTION_SEND
+        shareIntent.putExtra(Intent.EXTRA_STREAM, result)
+        shareIntent.type = "image/png"
+        startActivity(Intent.createChooser(shareIntent, "Share"))
     }
 }
-
-    private fun shareImage(result:Uri?){
-            val shareIntent = Intent()
-            shareIntent.action = Intent.ACTION_SEND
-            shareIntent.putExtra(Intent.EXTRA_STREAM, result)
-            shareIntent.type = "image/png"
-            startActivity(Intent.createChooser(shareIntent, "Share"))
-        }
-}
-

@@ -36,14 +36,18 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         mDrawPaint!!.strokeCap = Paint.Cap.ROUND // This is for stroke Cap
         mCanvasPaint = Paint(Paint.DITHER_FLAG) // Paint flag that enables dithering when blitting.
     }
+
     fun openColorPicker() {
-        val colorPicker = AmbilWarnaDialog(context, mcolor, object : AmbilWarnaDialog.OnAmbilWarnaListener {
-            override fun onCancel(dialog: AmbilWarnaDialog) {}
-            override fun onOk(dialog: AmbilWarnaDialog, color: Int) {
-                mcolor = color
-            }
-        })
-        colorPicker.show()}
+        val colorPicker =
+            AmbilWarnaDialog(context, mcolor, object : AmbilWarnaDialog.OnAmbilWarnaListener {
+                override fun onCancel(dialog: AmbilWarnaDialog) {}
+                override fun onOk(dialog: AmbilWarnaDialog, color: Int) {
+                    mcolor = color
+                }
+            })
+        colorPicker.show()
+    }
+
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         mCanvasBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
